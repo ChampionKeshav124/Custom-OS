@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Wallpaper Settings
+Comment=Change desktop wallpaper and appearance settings
+Exec=pcmanfm --desktop-pref
+Icon=preferences-desktop-wallpaper
+Terminal=false
+Categories=Settings;GTK;

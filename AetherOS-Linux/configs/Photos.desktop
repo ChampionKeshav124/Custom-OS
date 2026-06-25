@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Photos
+Comment=View and edit photos
+Exec=ristretto
+Icon=ristretto
+Terminal=false
+Categories=Graphics;

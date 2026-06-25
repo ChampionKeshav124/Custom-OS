@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Volume Settings
+Comment=Configure sound volume and mixers
+Exec=pavucontrol
+Icon=multimedia-volume-control
+Terminal=false
+Categories=Settings;DesktopSettings;

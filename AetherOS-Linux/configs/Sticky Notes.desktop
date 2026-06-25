@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Sticky Notes
+Comment=Quick sticky notes on desktop
+Exec=xpad
+Icon=xpad
+Terminal=false
+Categories=Utility;

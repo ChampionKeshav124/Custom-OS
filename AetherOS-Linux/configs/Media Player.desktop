@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Media Player
+Comment=VLC Media Player
+Exec=vlc
+Icon=vlc
+Terminal=false
+Categories=AudioVideo;Player;

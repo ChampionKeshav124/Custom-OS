@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Notepad
+Comment=Simple text editor
+Exec=mousepad
+Icon=text-editor
+Terminal=false
+Categories=Utility;TextEditor;

@@ -1,0 +1,326 @@
+#!/bin/bash
+# ==============================================================
+# AETHEROS LINUX — APPLICATION INSTALLATION HELPER
+# Supports offline/online installations of key applications.
+# ==============================================================
+
+set -e
+
+# Ensure DISPLAY and XAUTHORITY are set for GUI routing when run via sudo/root
+if [ -z "$DISPLAY" ]; then
+    export DISPLAY=:0
+fi
+if [ -z "$XAUTHORITY" ] && [ -f "/home/aether/.Xauthority" ]; then
+    export XAUTHORITY=/home/aether/.Xauthority
+fi
+
+GUI_MODE=true
+if [ "$1" = "--no-gui" ]; then
+    GUI_MODE=false
+    shift
+fi
+
+APP=$1
+
+if [ -z "$APP" ]; then
+    echo "Usage: aether-install [--no-gui] <app_name>"
+    echo "Supported custom apps: chrome, firefox, edge, openoffice"
+    exit 1
+fi
+
+# Convert app name to lowercase
+APP=$(echo "$APP" | tr '[:upper:]' '[:lower:]')
+
+# Route to GUI deployer if graphics display is active
+if [ "$GUI_MODE" = "true" ] && [ -n "$DISPLAY" ] && [ -f "/usr/local/bin/aether-installer-gui.py" ]; then
+    echo "Redirecting to Aetheris Deployment Protocol GUI..."
+    python3 /usr/local/bin/aether-installer-gui.py "$APP"
+    exit $?
+fi
+
+# Check if network is up
+check_network() {
+    # Check via curl/wget first as ping/ICMP might be blocked in virtual machines
+    if curl -s --head --connect-timeout 3 https://www.google.com >/dev/null 2>&1; then
+        return 0
+    fi
+    if wget -q --spider --timeout=3 https://www.google.com >/dev/null 2>&1; then
+        return 0
+    fi
+    if ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
+        return 0
+    fi
+    # If all fail, warn the user but attempt to proceed anyway
+    echo "Warning: Network connectivity checks failed. Attempting to proceed anyway..."
+    return 0
+}
+
+create_desktop_shortcut() {
+    local APP_NAME=$1
+    echo "Creating desktop shortcut for $APP_NAME..."
+    mkdir -p /home/aether/Desktop
+    
+    # Search in common desktop entry directories (including snap)
+    local DESKTOP_FILE=""
+    for dir in "/usr/share/applications" "/var/lib/snapd/desktop/applications" "/usr/local/share/applications"; do
+        if [ -d "$dir" ]; then
+            # Find the most matching desktop file (case-insensitive)
+            local found=$(find "$dir" -maxdepth 1 -iname "*${APP_NAME}*.desktop" -print -quit)
+            if [ -n "$found" ]; then
+                DESKTOP_FILE=$found
+                break
+            fi
+        fi
+    done
+    
+    if [ -n "$DESKTOP_FILE" ]; then
+        local dest_name=$(basename "$DESKTOP_FILE")
+        cp "$DESKTOP_FILE" "/home/aether/Desktop/$dest_name"
+        chmod +x "/home/aether/Desktop/$dest_name"
+        chown aether:aether "/home/aether/Desktop/$dest_name"
+        echo "Desktop shortcut created: /home/aether/Desktop/$dest_name"
+    else
+        echo "Warning: Could not find desktop entry for $APP_NAME in application directories."
+        # Backup explicit check for known names
+        if [ "$APP_NAME" = "code" ] && [ -f "/usr/share/applications/code.desktop" ]; then
+            cp "/usr/share/applications/code.desktop" "/home/aether/Desktop/code.desktop"
+            chmod +x "/home/aether/Desktop/code.desktop"
+            chown aether:aether "/home/aether/Desktop/code.desktop"
+            echo "Desktop shortcut created explicitly: /home/aether/Desktop/code.desktop"
+        elif [ "$APP_NAME" = "zoom" ] && [ -f "/usr/share/applications/Zoom.desktop" ]; then
+            cp "/usr/share/applications/Zoom.desktop" "/home/aether/Desktop/Zoom.desktop"
+            chmod +x "/home/aether/Desktop/Zoom.desktop"
+            chown aether:aether "/home/aether/Desktop/Zoom.desktop"
+            echo "Desktop shortcut created explicitly: /home/aether/Desktop/Zoom.desktop"
+        fi
+    fi
+}
+
+case "$APP" in
+    chrome|google-chrome|google-chrome-stable)
+        echo "Installing Google Chrome..."
+        # 0. Check if Chrome is already installed (offline chroot preload)
+        if [ -f "/usr/bin/google-chrome-stable" ]; then
+            echo "Google Chrome is already installed. Verifying offline deployment..."
+            sleep 1
+        # 1. Check if we have the preloaded local package
+        elif [ -f "/home/aether/Downloads/google-chrome.deb" ]; then
+            echo "Installing Google Chrome from preloaded local package..."
+            sudo dpkg -i /home/aether/Downloads/google-chrome.deb || sudo apt-get install -y -f
+        else
+            if check_network; then
+                echo "Downloading and installing Google Chrome stable..."
+                wget -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+                sudo apt-get install -y /tmp/chrome.deb
+                rm -f /tmp/chrome.deb
+            else
+                echo "Error: Google Chrome installer package not found at /home/aether/Downloads/google-chrome.deb and no internet connection."
+                exit 1
+            fi
+        fi
+        
+        # Ensure desktop shortcut
+        mkdir -p /home/aether/Desktop
+        cat <<'EOF' > "/home/aether/Desktop/Google Chrome.desktop"
+[Desktop Entry]
+Version=1.0
+Name=Google Chrome
+Comment=Access the Internet
+Exec=/usr/bin/google-chrome-stable --no-sandbox
+Icon=google-chrome
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+EOF
+        chmod +x "/home/aether/Desktop/Google Chrome.desktop"
+        chown aether:aether "/home/aether/Desktop/Google Chrome.desktop"
+        # Remove old installer launcher if exists
+        rm -f "/home/aether/Desktop/Chrome Setup.desktop"
+        echo "Google Chrome installation complete."
+        ;;
+        
+    firefox)
+        echo "Installing Mozilla Firefox..."
+        # On Ubuntu 22.04, standard apt install firefox uses snap, which can fail in Live CD.
+        # We will install firefox non-snap version via direct download or repository if online.
+        if check_network; then
+            echo "Downloading and installing Firefox (non-snap)..."
+            # We can download direct tarball which is extremely reliable and fast
+            wget -O /tmp/firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-latest-ssl&os=linux64&lang=en-US"
+            sudo tar -xf /tmp/firefox.tar.bz2 -C /opt/
+            sudo ln -sf /opt/firefox/firefox /usr/local/bin/firefox
+            rm -f /tmp/firefox.tar.bz2
+            
+            # Create desktop entry
+            mkdir -p /home/aether/Desktop
+            cat <<'EOF' > /home/aether/Desktop/Firefox.desktop
+[Desktop Entry]
+Version=1.0
+Name=Firefox Web Browser
+Comment=Browse the World Wide Web
+Exec=/usr/local/bin/firefox
+Icon=firefox
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+EOF
+            chmod +x "/home/aether/Desktop/Firefox.desktop"
+            chown aether:aether "/home/aether/Desktop/Firefox.desktop"
+            echo "Firefox installation complete."
+        else
+            echo "Error: Firefox installation requires active internet connection."
+            exit 1
+        fi
+        ;;
+
+    edge|microsoft-edge|microsoft-edge-stable)
+        echo "Installing Microsoft Edge..."
+        if check_network; then
+            echo "Adding Microsoft repository..."
+            curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/microsoft-edge.gpg > /dev/null
+            echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-edge.gpg] https://packages.microsoft.com/repos/edge stable main" | sudo tee /etc/apt/sources.list.d/microsoft-edge.list
+            sudo apt-get update
+            sudo apt-get install -y microsoft-edge-stable
+            
+            # Create desktop shortcut (since Edge might start with sandbox, --no-sandbox might be needed inside VirtualBox if 3d acceleration is off)
+            mkdir -p /home/aether/Desktop
+            cat <<'EOF' > /home/aether/Desktop/Microsoft Edge.desktop
+[Desktop Entry]
+Version=1.0
+Name=Microsoft Edge
+Comment=Access the Internet
+Exec=/usr/bin/microsoft-edge-stable --no-sandbox
+Icon=microsoft-edge
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+EOF
+            chmod +x "/home/aether/Desktop/Microsoft Edge.desktop"
+            chown aether:aether "/home/aether/Desktop/Microsoft Edge.desktop"
+            echo "Microsoft Edge installation complete."
+        else
+            echo "Error: Microsoft Edge installation requires active internet connection."
+            exit 1
+        fi
+        ;;
+
+    openoffice|apache-openoffice)
+        echo "Installing Apache OpenOffice..."
+        if check_network; then
+            echo "Downloading and extracting Apache OpenOffice..."
+            # Clean up old LibreOffice to prevent conflicts
+            sudo apt-get remove --purge -y libreoffice* || true
+            sudo apt-get autoremove -y || true
+            
+            wget -O /tmp/openoffice.tar.gz "https://sourceforge.net/projects/openofficeorg.mirror/files/4.1.14/binaries/en-US/Apache_OpenOffice_4.1.14_Linux_x86-64_install-deb_en-US.tar.gz"
+            mkdir -p /tmp/openoffice_install
+            tar -xf /tmp/openoffice.tar.gz -C /tmp/openoffice_install
+            
+            echo "Installing OpenOffice packages..."
+            sudo dpkg -i /tmp/openoffice_install/en-US/DEBS/*.deb
+            sudo dpkg -i /tmp/openoffice_install/en-US/DEBS/desktop-integration/*.deb
+            
+            rm -rf /tmp/openoffice_install /tmp/openoffice.tar.gz
+            create_desktop_shortcut "openoffice"
+            echo "Apache OpenOffice installation complete."
+        else
+            echo "Error: Apache OpenOffice installation requires active internet connection."
+            exit 1
+        fi
+        ;;
+
+    vscode|code)
+        echo "Installing Visual Studio Code..."
+        if check_network; then
+            wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/packages.microsoft.gpg
+            sudo install -D -o root -g root -m 644 /tmp/packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+            echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list
+            rm -f /tmp/packages.microsoft.gpg
+            sudo apt-get update
+            sudo apt-get install -y code
+            create_desktop_shortcut "code"
+            echo "Visual Studio Code installation complete."
+        else
+            echo "Error: VS Code installation requires active internet connection."
+            exit 1
+        fi
+        ;;
+
+    discord)
+        echo "Installing Discord..."
+        if check_network; then
+            wget -O /tmp/discord.deb "https://discord.com/api/download?platform=linux&format=deb"
+            sudo apt-get install -y /tmp/discord.deb || sudo apt-get install -f -y
+            rm -f /tmp/discord.deb
+            create_desktop_shortcut "discord"
+            echo "Discord installation complete."
+        else
+            echo "Error: Discord installation requires active internet connection."
+            exit 1
+        fi
+        ;;
+
+    slack)
+        echo "Installing Slack..."
+        if check_network; then
+            # Attempt to install snap version if snapd is running, or fall back to standard apt-get install
+            sudo snap install slack --classic || sudo apt-get install -y slack
+            create_desktop_shortcut "slack"
+            echo "Slack installation complete."
+        else
+            echo "Error: Slack installation requires active internet connection."
+            exit 1
+        fi
+        ;;
+
+    spotify)
+        echo "Installing Spotify..."
+        if check_network; then
+            curl -sS https://download.spotify.com/debian/pubkey_7A1116A1116A46EF.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg || curl -sS https://download.spotify.com/debian/pubkey_C44C3D01.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
+            echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
+            sudo apt-get update
+            sudo apt-get install -y spotify-client
+            create_desktop_shortcut "spotify"
+            echo "Spotify installation complete."
+        else
+            echo "Error: Spotify installation requires active internet connection."
+            exit 1
+        fi
+        ;;
+
+    steam)
+        echo "Installing Steam..."
+        if check_network; then
+            sudo dpkg --add-architecture i386
+            sudo apt-get update
+            sudo apt-get install -y steam
+            create_desktop_shortcut "steam"
+            echo "Steam installation complete."
+        else
+            echo "Error: Steam installation requires active internet connection."
+            exit 1
+        fi
+        ;;
+
+    zoom)
+        echo "Installing Zoom..."
+        if check_network; then
+            wget -O /tmp/zoom.deb "https://zoom.us/client/latest/zoom_amd64.deb"
+            sudo apt-get install -y /tmp/zoom.deb || sudo apt-get install -f -y
+            rm -f /tmp/zoom.deb
+            create_desktop_shortcut "zoom"
+            echo "Zoom installation complete."
+        else
+            echo "Error: Zoom installation requires active internet connection."
+            exit 1
+        fi
+        ;;
+        
+    *)
+        echo "Attempting standard installation via apt-get for '$APP'..."
+        sudo apt-get update
+        sudo apt-get install -y "$APP"
+        create_desktop_shortcut "$APP"
+        ;;
+esac
+

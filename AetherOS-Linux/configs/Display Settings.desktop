@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Display Settings
+Comment=Configure display resolution and screens
+Exec=lxrandr
+Icon=video-display
+Terminal=false
+Categories=Settings;DesktopSettings;

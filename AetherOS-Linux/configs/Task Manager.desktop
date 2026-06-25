@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Task Manager
+Comment=Monitor system processes
+Exec=lxtask
+Icon=utilities-system-monitor
+Terminal=false
+Categories=System;Monitor;

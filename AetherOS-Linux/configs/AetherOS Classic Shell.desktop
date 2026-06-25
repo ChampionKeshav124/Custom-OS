@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=AetherOS Classic Shell
+Comment=Open the classic command-line hobby kernel shell
+Exec=lxterminal -t "AetherOS Classic Shell" -e "python3 /home/aether/copilot/aetheros_shell.py"
+Icon=system-run
+Terminal=false
+Categories=System;Utility;

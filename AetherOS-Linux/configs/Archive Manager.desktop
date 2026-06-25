@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Archive Manager
+Comment=Create and modify archives
+Exec=file-roller
+Icon=system-file-manager
+Terminal=false
+Categories=Utility;

@@ -1,0 +1,194 @@
+# ==============================================================
+# AETHEROS LINUX — FULL SCREEN FUTURISTIC AI BOOT SPLASH
+# ==============================================================
+
+# 1. Background Settings
+bg_color.red = 0.01;
+bg_color.green = 0.01;
+bg_color.blue = 0.02;
+Window.SetBackgroundTopColor(bg_color.red, bg_color.green, bg_color.blue);
+Window.SetBackgroundBottomColor(bg_color.red, bg_color.green, bg_color.blue);
+
+cx = Window.GetWidth() / 2;
+cy = Window.GetHeight() / 2;
+
+# 2. Load and Scale HUD Brackets (Background Overlay)
+hud_img = Image("hud_brackets.png");
+scaled_hud = hud_img.Scale(Window.GetWidth(), Window.GetHeight());
+hud_sprite = Sprite(scaled_hud);
+hud_sprite.SetX(0);
+hud_sprite.SetY(0);
+hud_sprite.SetZ(-10); # Behind all elements
+hud_sprite.SetOpacity(0.0); # Fade in later
+
+# 3. Load AI Core Graphic Rings
+outer_img = Image("ring_outer.png");
+outer_sprite = Sprite(outer_img);
+outer_sprite.SetX(cx - outer_img.GetWidth() / 2);
+outer_sprite.SetY(cy - outer_img.GetHeight() / 2 - 80);
+outer_sprite.SetOpacity(0.0);
+
+mid_img = Image("ring_mid.png");
+mid_sprite = Sprite(mid_img);
+mid_sprite.SetX(cx - mid_img.GetWidth() / 2);
+mid_sprite.SetY(cy - mid_img.GetHeight() / 2 - 80);
+mid_sprite.SetOpacity(0.0);
+
+inner_img = Image("ring_inner.png");
+inner_sprite = Sprite(inner_img);
+inner_sprite.SetX(cx - inner_img.GetWidth() / 2);
+inner_sprite.SetY(cy - inner_img.GetHeight() / 2 - 80);
+inner_sprite.SetOpacity(0.0);
+
+glow_img = Image("core_glow.png");
+glow_sprite = Sprite(glow_img);
+glow_sprite.SetX(cx - glow_img.GetWidth() / 2);
+glow_sprite.SetY(cy - glow_img.GetHeight() / 2 - 80);
+glow_sprite.SetOpacity(0.0);
+
+# 4. Animated Text: "AETHER OS AI CORE INITIALIZING"
+title_img = Image.Text("AETHER OS AI CORE INITIALIZING", 0.0, 0.9, 1.0, 1.0, "Share Tech Mono 18");
+title_sprite = Sprite(title_img);
+title_sprite.SetX(cx - title_img.GetWidth() / 2);
+title_sprite.SetY(cy - outer_img.GetHeight() / 2 - 140);
+title_sprite.SetOpacity(0.0);
+
+# 5. Diagnostic Log System (Bottom-Left Console Logs)
+log_x = 100;
+log_y = cy + 150;
+
+log_sprite_0 = Sprite(); log_sprite_0.SetX(log_x); log_sprite_0.SetY(log_y + 0);   log_sprite_0.SetOpacity(0.0); log_0_loaded = 0;
+log_sprite_1 = Sprite(); log_sprite_1.SetX(log_x); log_sprite_1.SetY(log_y + 24);  log_sprite_1.SetOpacity(0.0); log_1_loaded = 0;
+log_sprite_2 = Sprite(); log_sprite_2.SetX(log_x); log_sprite_2.SetY(log_y + 48);  log_sprite_2.SetOpacity(0.0); log_2_loaded = 0;
+log_sprite_3 = Sprite(); log_sprite_3.SetX(log_x); log_sprite_3.SetY(log_y + 72);  log_sprite_3.SetOpacity(0.0); log_3_loaded = 0;
+log_sprite_4 = Sprite(); log_sprite_4.SetX(log_x); log_sprite_4.SetY(log_y + 96);  log_sprite_4.SetOpacity(0.0); log_4_loaded = 0;
+log_sprite_5 = Sprite(); log_sprite_5.SetX(log_x); log_sprite_5.SetY(log_y + 120); log_sprite_5.SetOpacity(0.0); log_5_loaded = 0;
+
+# 6. Load Progress Bar Images
+prog_bg_img = Image("progress_bg.png");
+prog_bg_sprite = Sprite(prog_bg_img);
+prog_bg_sprite.SetX(cx - prog_bg_img.GetWidth() / 2);
+prog_bg_sprite.SetY(cy + 100);
+prog_bg_sprite.SetOpacity(0.0);
+
+prog_fill_base = Image("progress_fill.png");
+prog_fill_sprite = Sprite();
+prog_fill_sprite.SetOpacity(0.0);
+
+# 7. Animation Variables
+time_seconds = 0.0;
+fade_alpha = 0.0;
+is_fading_out = 0;
+
+# 8. Refresh Callback (Main Animation Loop running at 60 FPS)
+fun refresh_callback() {
+  time_seconds = time_seconds + 0.016; # ~60 FPS update step
+  
+  # A. Handle Fade In (0.0 to 1.0)
+  if (is_fading_out == 0) {
+    if (fade_alpha < 1.0) {
+      fade_alpha = fade_alpha + 0.04;
+      if (fade_alpha > 1.0) { fade_alpha = 1.0; }
+    }
+  } else {
+    # Handle Fade Out (1.0 to 0.0)
+    if (fade_alpha > 0.0) {
+      fade_alpha = fade_alpha - 0.04;
+      if (fade_alpha < 0.0) { fade_alpha = 0.0; }
+    }
+  }
+  
+  # B. Core Ring Rotations
+  # Outer: clockwise, slow
+  outer_sprite.SetAngle(time_seconds * 0.4);
+  # Middle: counter-clockwise, medium
+  mid_sprite.SetAngle(-time_seconds * 0.8);
+  # Inner: clockwise, fast
+  inner_sprite.SetAngle(time_seconds * 1.5);
+  
+  # C. Pulsing Glow effect
+  glow_scale = 1.0 + 0.15 * Math.Sin(time_seconds * 6);
+  scaled_glow = glow_img.Scale(glow_img.GetWidth() * glow_scale, glow_img.GetHeight() * glow_scale);
+  glow_sprite.SetImage(scaled_glow);
+  glow_sprite.SetX(cx - scaled_glow.GetWidth() / 2);
+  glow_sprite.SetY(cy - scaled_glow.GetHeight() / 2 - 80);
+  
+  # D. Update Opacity with fade_alpha
+  hud_sprite.SetOpacity(fade_alpha * 0.65);
+  outer_sprite.SetOpacity(fade_alpha);
+  mid_sprite.SetOpacity(fade_alpha);
+  inner_sprite.SetOpacity(fade_alpha);
+  glow_sprite.SetOpacity(fade_alpha * (0.6 + 0.4 * Math.Sin(time_seconds * 6)));
+  title_sprite.SetOpacity(fade_alpha * (0.8 + 0.2 * Math.Sin(time_seconds * 3)));
+  prog_bg_sprite.SetOpacity(fade_alpha);
+  
+  # E. Progress computation (simulated up to 4.5 seconds for visual impact)
+  progress = time_seconds / 4.5;
+  if (progress > 1.0) { progress = 1.0; }
+  
+  # Scale progress bar fill
+  fill_w = Math.Int(progress * 496);
+  if (fill_w < 1) { fill_w = 1; }
+  scaled_fill = prog_fill_base.Scale(fill_w, 12);
+  prog_fill_sprite.SetImage(scaled_fill);
+  prog_fill_sprite.SetX(cx - 248);
+  prog_fill_sprite.SetY(cy + 102);
+  prog_fill_sprite.SetOpacity(fade_alpha);
+  
+  # F. Show/hide terminal logs based on progress steps
+  if (progress >= 0.15) {
+    if (log_0_loaded == 0) {
+      log_sprite_0.SetImage(Image.Text("CORE_LINK: ONLINE  |  SYS_PORT: 5122", 0.0, 0.75, 0.85, 1.0, "Courier 12"));
+      log_0_loaded = 1;
+    }
+    log_sprite_0.SetOpacity(fade_alpha);
+  }
+  if (progress >= 0.30) {
+    if (log_1_loaded == 0) {
+      log_sprite_1.SetImage(Image.Text("[  OK  ] CPU INTEL/AMD x86_64: 2 CORES DETECTED", 0.0, 0.75, 0.85, 1.0, "Courier 12"));
+      log_1_loaded = 1;
+    }
+    log_sprite_1.SetOpacity(fade_alpha);
+  }
+  if (progress >= 0.45) {
+    if (log_2_loaded == 0) {
+      log_sprite_2.SetImage(Image.Text("[  OK  ] HARDWARE SYSTEM RAM: 2048 MB VERIFIED", 0.0, 0.75, 0.85, 1.0, "Courier 12"));
+      log_2_loaded = 1;
+    }
+    log_sprite_2.SetOpacity(fade_alpha);
+  }
+  if (progress >= 0.60) {
+    if (log_3_loaded == 0) {
+      log_sprite_3.SetImage(Image.Text("[  OK  ] STORAGE VOLUME /dev/sda: ACTIVE (20 GB)", 0.0, 0.75, 0.85, 1.0, "Courier 12"));
+      log_3_loaded = 1;
+    }
+    log_sprite_3.SetOpacity(fade_alpha);
+  }
+  if (progress >= 0.75) {
+    if (log_4_loaded == 0) {
+      log_sprite_4.SetImage(Image.Text("[  OK  ] DEPLOYING COPROCESSOR NEURAL LINK", 0.0, 0.75, 0.85, 1.0, "Courier 12"));
+      log_4_loaded = 1;
+    }
+    log_sprite_4.SetOpacity(fade_alpha);
+  }
+  if (progress >= 0.90) {
+    if (log_5_loaded == 0) {
+      log_sprite_5.SetImage(Image.Text("[  OK  ] SECURE BOOT SUCCESS. WELCOME BACK, SIR.", 0.0, 0.75, 0.85, 1.0, "Courier 12"));
+      log_5_loaded = 1;
+    }
+    log_sprite_5.SetOpacity(fade_alpha);
+  }
+  
+  # G. Check for completion and initiate fade out
+  if (progress >= 1.0 && is_fading_out == 0) {
+    is_fading_out = 1;
+  }
+  
+  # End Plymouth when fade out completes
+  if (is_fading_out == 1 && fade_alpha <= 0.0) {
+    # Exit Plymouth session
+    # (systemd will stop Plymouth automatically, but fading everything to black looks extremely smooth)
+  }
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);

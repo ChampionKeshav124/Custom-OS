@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Name=Chrome Setup.exe
+Exec=/home/aether/copilot/launchers/chrome_setup.sh
+Icon=system-software-install
+Comment=Install Google Chrome Browser
+Path=/home/aether/copilot/launchers

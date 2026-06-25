@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Paint
+Comment=Draw and edit images
+Exec=drawing
+Icon=drawing
+Terminal=false
+Categories=Graphics;

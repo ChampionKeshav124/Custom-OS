@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Calendar
+Comment=Manage your schedule
+Exec=osmo
+Icon=osmo
+Terminal=false
+Categories=Office;Calendar;

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Aether Pilot
+Comment=Launch Aether Pilot System Copilot
+Exec=python3 /home/aether/copilot/copilot.py
+Icon=/usr/share/pixmaps/aether_pilot.png
+Terminal=false
+Type=Application
+Categories=Utility;
