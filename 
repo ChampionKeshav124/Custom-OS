@@ -1,0 +1,33 @@
+178:  1001fa:	e8 91 19 00 00       	call   101b90 <pmm_init>
+1734:0000000000101b90 <pmm_init>:
+1744:  101ba8:	0f 85 00 03 00 00    	jne    101eae <pmm_init+0x31e>
+1750:  101bbd:	75 22                	jne    101be1 <pmm_init+0x51>
+1751:  101bbf:	e9 21 03 00 00       	jmp    101ee5 <pmm_init+0x355>
+1760:  101bdb:	0f 84 04 03 00 00    	je     101ee5 <pmm_init+0x355>
+1762:  101be4:	75 e2                	jne    101bc8 <pmm_init+0x38>
+1773:  101c0b:	0f 84 00 01 00 00    	je     101d11 <pmm_init+0x181>
+1778:  101c1b:	eb 05                	jmp    101c22 <pmm_init+0x92>
+1784:  101c2b:	75 0e                	jne    101c3b <pmm_init+0xab>
+1792:  101c44:	75 da                	jne    101c20 <pmm_init+0x90>
+1803:  101c72:	74 2c                	je     101ca0 <pmm_init+0x110>
+1807:  101c7f:	74 0f                	je     101c90 <pmm_init+0x100>
+1811:  101c8b:	74 13                	je     101ca0 <pmm_init+0x110>
+1817:  101c9e:	75 f0                	jne    101c90 <pmm_init+0x100>
+1820:  101ca8:	eb 0f                	jmp    101cb9 <pmm_init+0x129>
+1824:  101cb5:	74 78                	je     101d2f <pmm_init+0x19f>
+1830:  101cc6:	75 e8                	jne    101cb0 <pmm_init+0x120>
+1837:  101cdc:	74 d2                	je     101cb0 <pmm_init+0x120>
+1839:  101ce2:	eb 0b                	jmp    101cef <pmm_init+0x15f>
+1843:  101ced:	74 c1                	je     101cb0 <pmm_init+0x120>
+1845:  101cf2:	73 f4                	jae    101ce8 <pmm_init+0x158>
+1855:  101d0f:	eb d7                	jmp    101ce8 <pmm_init+0x158>
+1875:  101d59:	75 e5                	jne    101d40 <pmm_init+0x1b0>
+1888:  101d87:	74 20                	je     101da9 <pmm_init+0x219>
+1899:  101da7:	75 e7                	jne    101d90 <pmm_init+0x200>
+1907:  101dc8:	74 1f                	je     101de9 <pmm_init+0x259>
+1918:  101de7:	75 e7                	jne    101dd0 <pmm_init+0x240>
+1925:  101dfd:	74 30                	je     101e2f <pmm_init+0x29f>
+1933:  101e11:	72 09                	jb     101e1c <pmm_init+0x28c>
+1938:  101e22:	75 dc                	jne    101e00 <pmm_init+0x270>
+1940:  101e27:	74 06                	je     101e2f <pmm_init+0x29f>
+1988:  101ef1:	eb a8                	jmp    101e9b <pmm_init+0x30b>
