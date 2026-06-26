@@ -2,7 +2,7 @@ import urllib.request
 import json
 import urllib.error
 
-key = "AIzaSyA4g4lU8SxBaKWGinlXpFCwBS3Rw8YG5Bc"
+key = "Enter Gemini API key"
 url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key={key}"
 headers = {'Content-Type': 'application/json'}
 payload = {
